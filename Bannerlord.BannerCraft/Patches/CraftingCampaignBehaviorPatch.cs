@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.CampaignBehaviors;
 using TaleWorlds.CampaignSystem.Party;
@@ -10,7 +10,8 @@ namespace Bannerlord.BannerCraft.Patches
     [HarmonyPatch(typeof(CraftingCampaignBehavior), "DoSmelting")]
     internal static class CraftingCampaignBehaviorPatch
     {
-        public static bool Prefix(CraftingCampaignBehavior __instance, Hero hero, EquipmentElement equipmentElement)
+        // Changed 'Hero hero' to 'Hero currentCraftingHero' to match original method signature
+        public static bool Prefix(CraftingCampaignBehavior __instance, Hero currentCraftingHero, EquipmentElement equipmentElement)
         {
             ItemObject item = equipmentElement.Item;
             if (item.WeaponDesign != null && item.WeaponDesign.Template != null)
@@ -29,10 +30,17 @@ namespace Bannerlord.BannerCraft.Patches
             }
 
             itemRoster.AddToCounts(equipmentElement, -1);
-            hero.AddSkillXp(DefaultSkills.Crafting, Campaign.Current.Models.SmithingModel.GetSkillXpForSmelting(item));
-            int energyCostForSmelting = Campaign.Current.Models.SmithingModel.GetEnergyCostForSmelting(item, hero);
-            __instance.SetHeroCraftingStamina(hero, __instance.GetHeroCraftingStamina(hero) - energyCostForSmelting);
-            CampaignEventDispatcher.Instance.OnEquipmentSmeltedByHero(hero, equipmentElement);
+
+            // Updated variable name usage here
+            currentCraftingHero.AddSkillXp(DefaultSkills.Crafting, Campaign.Current.Models.SmithingModel.GetSkillXpForSmelting(item));
+
+            // Updated variable name usage here
+            int energyCostForSmelting = Campaign.Current.Models.SmithingModel.GetEnergyCostForSmelting(item, currentCraftingHero);
+
+            __instance.SetHeroCraftingStamina(currentCraftingHero, __instance.GetHeroCraftingStamina(currentCraftingHero) - energyCostForSmelting);
+
+            // Updated variable name usage here
+            CampaignEventDispatcher.Instance.OnEquipmentSmeltedByHero(currentCraftingHero, equipmentElement);
 
             return false;
         }
